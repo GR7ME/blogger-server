@@ -4,6 +4,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaClient } from '@prisma/client'
 import { PrismaService } from 'src/prisma/prisma.service';
 import { domainToASCII } from 'url';
+import { stringify } from 'querystring';
 
 
 @Injectable()
@@ -38,19 +39,63 @@ export class PostsService {
     //if different then create post
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async findAll() {
+    const post  = await this.prisma.post.findMany()
+
+    return post;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: string) {
+    //find  user by id
+    const post = await this.prisma.post.findUnique({
+      where:{
+        id
+      }
+    })
+    //if exists send otherwise throw error
+    if(!post){
+      throw new ForbiddenException("No post with such Id")
+    }
+    return post;
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: string, updatePostDto: UpdatePostDto) {
+    //find post by id
+    const post = await this.prisma.post.findUnique({
+      where:{
+        id
+      }
+    })
+    //if doesnt exists throw error
+    if(!post){
+      throw new ForbiddenException("No post with such Id")
+    }
+
+    return this.prisma.post.update({
+      where:{
+        id
+      },data:{
+        ...updatePostDto
+      }
+    })
+ 
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: string) {
+    const post = await this.prisma.post.findUnique({
+      where:{
+        id
+      }
+    })
+    //if doesnt exists throw error
+    if(!post){
+      throw new ForbiddenException("No post with such Id")
+    }
+    
+    return this.prisma.post.delete({
+      where:{
+        id
+      }
+    })
   }
 }
