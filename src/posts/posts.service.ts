@@ -5,11 +5,14 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaService } from 'src/prisma/prisma.service';
 import { domainToASCII } from 'url';
 import { stringify } from 'querystring';
+import { threadId } from 'worker_threads';
 
 
 @Injectable()
 export class PostsService {
   constructor(private prisma:PrismaService){}
+  
+  
   async create(createPostDto: CreatePostDto) {
     //check for same title
     const alreadypost  = await this.prisma.post.findUnique({
@@ -30,8 +33,9 @@ export class PostsService {
           tags:createPostDto.tags
         }
       })
+      console.log(post)
 
-      return post
+      return this.findAll()
     
     }catch(error){
       console.log(error)
@@ -92,10 +96,12 @@ export class PostsService {
       throw new ForbiddenException("No post with such Id")
     }
     
-    return this.prisma.post.delete({
+    const del = await this.prisma.post.delete({
       where:{
         id
       }
     })
+    console.log(del)
+    return this.findAll()
   }
 }
